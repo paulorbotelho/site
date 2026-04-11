@@ -1,8 +1,8 @@
-// 1. Inicializar Ícones
+// 1. Registro de Plugins (No topo para evitar erros de referência)
+gsap.registerPlugin(ScrollTrigger);
 lucide.createIcons();
 
-// 2. Smooth Scrolling (Lenis) - Calibrado para fluidez máxima
-// 2. Smooth Scrolling (Lenis) - Calibrado para fluidez máxima
+// 2. Smooth Scrolling (Lenis) Otimizado
 const lenis = new Lenis({
     duration: 1.2,
     easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -11,19 +11,18 @@ const lenis = new Lenis({
     smoothWheel: true,
     wheelMultiplier: 1,
     touchMultiplier: 1.5,
-    infinite: false,
 })
 
-// Sincronizar Lenis com ScrollTrigger
+// Sincronização Lenis + ScrollTrigger
 lenis.on('scroll', ScrollTrigger.update);
 
 function raf(time) {
-    lenis.raf(time)
-    requestAnimationFrame(raf)
+    lenis.raf(time);
+    requestAnimationFrame(raf);
 }
-requestAnimationFrame(raf)
+requestAnimationFrame(raf);
 
-// Handler para links internos (Smooth Scroll a ancoras)
+// 3. Handlers de Navegação
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -40,14 +39,15 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// 3. Animações de Entrada (GSAP)
+// 4. Animações de Entrada (GSAP)
 document.addEventListener("DOMContentLoaded", () => {
-    gsap.registerPlugin(ScrollTrigger);
+    // Forçar aceleração de hardware
+    gsap.set(".hero-content > *, #photo-frame, .about-visual, .about-content > *, .project-cards > *", { 
+        force3D: true, 
+        backfaceVisibility: "hidden" 
+    });
 
-    // Otimização: Forçar aceleração de hardware nos elementos animados
-    gsap.set(".hero-content > *, #photo-frame, .about-visual, .about-content > *, .project-cards > *", { force3D: true, backfaceVisibility: "hidden" });
-
-    // Textos e botões subindo
+    // --- Hero Animations ---
     gsap.from(".hero-content > *", {
         y: 40,
         opacity: 0,
@@ -57,7 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
         delay: 0.1
     });
 
-    // Imagem e bloco visual
     gsap.from(".hero-visual", {
         opacity: 0,
         duration: 1.5,
@@ -74,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
         delay: 0.5
     });
 
-    // --- ScrollTrigger: Revealing da Seção Sobre Mim ---
+    // --- About Section ---
     gsap.from(".about-visual", {
         scrollTrigger: {
             trigger: "#sobre",
@@ -100,22 +99,25 @@ document.addEventListener("DOMContentLoaded", () => {
         ease: "power2.out"
     });
 
-    // --- Projetos Section Animations (Ajustado para maior confiabilidade) ---
-    gsap.from(".project-cards > a", {
-        scrollTrigger: {
-            trigger: ".project-cards",
-            start: "top 90%",
-            once: true,
-            // markers: true, // debug (remover no final)
-        },
-        y: 50,
-        opacity: 0,
-        duration: 1.2,
-        stagger: 0.2,
-        ease: "power2.out"
-    });
+    // --- Projects Section (Fix: Usando seletor direto e trigger robusto) ---
+    const cards = document.querySelectorAll('.project-cards > a');
+    if (cards.length > 0) {
+        gsap.from(cards, {
+            scrollTrigger: {
+                trigger: ".project-cards",
+                start: "top 95%",
+                once: true,
+            },
+            y: 50,
+            opacity: 0,
+            duration: 1.2,
+            stagger: 0.2,
+            ease: "power2.out",
+            clearProps: "all" // Garante que o GSAP não deixe estilos presos após rodar
+        });
+    }
 
-    // --- Footer Animations ---
+    // --- Footer ---
     gsap.from("footer .footer-content > *", {
         scrollTrigger: {
             trigger: "footer",
@@ -129,19 +131,16 @@ document.addEventListener("DOMContentLoaded", () => {
         ease: "power2.out"
     });
 
-    // 4. Interações de Mouse (Tilt & Parallax) OTIMIZADAS
+    // 5. Mouse Interaction
     const mainContainer = document.querySelector('main');
-    const parallaxIcons = document.querySelectorAll('.parallax-el');
     const tiltCard = document.getElementById('tilt-container');
+    const parallaxIcons = document.querySelectorAll('.parallax-el');
 
     if (mainContainer && tiltCard) {
-        let mouseX = 0;
-        let mouseY = 0;
-
         mainContainer.addEventListener('mousemove', (e) => {
             const rect = mainContainer.getBoundingClientRect();
-            mouseX = (e.clientX - rect.left) / rect.width * 2 - 1;
-            mouseY = (e.clientY - rect.top) / rect.height * 2 - 1;
+            const mouseX = (e.clientX - rect.left) / rect.width * 2 - 1;
+            const mouseY = (e.clientY - rect.top) / rect.height * 2 - 1;
 
             gsap.to(tiltCard, {
                 rotationY: mouseX * 8,
@@ -169,6 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Refresh final para garantir que todas as posições estão corretas
+    // Refresh final para Sincronizar tudo
     ScrollTrigger.refresh();
 });
