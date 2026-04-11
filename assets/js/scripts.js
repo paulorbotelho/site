@@ -1,16 +1,18 @@
 // 1. Inicializar Ícones
 lucide.createIcons();
 
-// 2. Smooth Scrolling (Lenis)
+// 2. Smooth Scrolling (Lenis) - Calibrado para fluidez máxima
 const lenis = new Lenis({
     duration: 1.2,
     easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    direction: 'vertical',
-    gestureDirection: 'vertical',
-    smooth: true,
-    mouseMultiplier: 1,
-    touchMultiplier: 2,
+    orientation: 'vertical',
+    gestureOrientation: 'vertical',
+    smoothWheel: true,
+    wheelMultiplier: 1,
+    touchMultiplier: 1.5,
+    infinite: false,
 })
+
 function raf(time) {
     lenis.raf(time)
     requestAnimationFrame(raf)
@@ -26,7 +28,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         const targetElement = document.querySelector(targetId);
         if (targetElement) {
             lenis.scrollTo(targetElement, {
-                offset: -20, // pequeno offset para não colar no topo
+                offset: -20,
                 duration: 1.5,
                 easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
             });
@@ -37,6 +39,9 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 // 3. Animações de Entrada (GSAP)
 document.addEventListener("DOMContentLoaded", () => {
     gsap.registerPlugin(ScrollTrigger);
+
+    // Otimização: Forçar aceleração de hardware nos elementos animados
+    gsap.set(".hero-content > *, #photo-frame, .about-visual, .about-content > *", { force3D: true, backfaceVisibility: "hidden" });
 
     // Textos e botões subindo
     gsap.from(".hero-content > *", {
@@ -51,15 +56,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Imagem e bloco visual
     gsap.from(".hero-visual", {
         opacity: 0,
-        filter: "blur(10px)",
         duration: 1.5,
         ease: "power2.out",
         delay: 0.3
     });
 
     gsap.from("#photo-frame", {
-        scale: 0.9,
+        scale: 0.95, // menos agressivo
         y: 20,
+        opacity: 0,
         duration: 1.5,
         ease: "expo.out",
         delay: 0.5
@@ -69,30 +74,30 @@ document.addEventListener("DOMContentLoaded", () => {
     gsap.from(".about-visual", {
         scrollTrigger: {
             trigger: "#sobre",
-            start: "top 75%",
+            start: "top 85%",
             once: true
         },
-        x: -50,
+        x: -30,
         opacity: 0,
-        duration: 1.5,
+        duration: 1.2,
         ease: "power3.out"
     });
 
     gsap.from(".about-content > *", {
         scrollTrigger: {
             trigger: "#sobre",
-            start: "top 80%",
+            start: "top 85%",
             once: true
         },
-        y: 40,
+        y: 30,
         opacity: 0,
         duration: 1,
-        stagger: 0.15,
+        stagger: 0.1,
         ease: "power2.out"
     });
 
     // --- Projetos Section Animations ---
-    gsap.from("#projetos > div:not(.absolute)", {
+    gsap.from(".project-cards > *", {
         scrollTrigger: {
             trigger: "#projetos",
             start: "top 80%",
@@ -101,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
         y: 40,
         opacity: 0,
         duration: 1,
-        stagger: 0.3,
+        stagger: 0.15,
         ease: "power2.out"
     });
 
@@ -109,59 +114,56 @@ document.addEventListener("DOMContentLoaded", () => {
     gsap.from("footer .footer-content > *", {
         scrollTrigger: {
             trigger: "footer",
-            start: "top 80%",
+            start: "top 90%",
             once: true
         },
-        y: 40,
+        y: 30,
         opacity: 0,
         duration: 1,
-        stagger: 0.15,
+        stagger: 0.1,
         ease: "power2.out"
     });
 
-    // 4. Interações de Mouse (Tilt & Parallax)
+    // 4. Interações de Mouse (Tilt & Parallax) OTIMIZADAS
     const mainContainer = document.querySelector('main');
-    const parallaxEls = document.querySelectorAll('.parallax-el');
-    const tiltContainer = document.getElementById('tilt-container');
+    const parallaxIcons = document.querySelectorAll('.parallax-el');
+    const tiltCard = document.getElementById('tilt-container');
 
-    if (mainContainer && tiltContainer) {
+    if (mainContainer && tiltCard) {
+        // Usar um objeto para armazenar posição alvo (evita chamadas excessivas)
+        let mouseX = 0;
+        let mouseY = 0;
+
         mainContainer.addEventListener('mousemove', (e) => {
             const rect = mainContainer.getBoundingClientRect();
-            const xAxis = (rect.width / 2 - (e.clientX - rect.left));
-            const yAxis = (rect.height / 2 - (e.clientY - rect.top));
+            // Normalizar valores entre -1 e 1
+            mouseX = (e.clientX - rect.left) / rect.width * 2 - 1;
+            mouseY = (e.clientY - rect.top) / rect.height * 2 - 1;
 
-            // Efeito Parallax nos Badges
-            parallaxEls.forEach(el => {
-                const speed = parseFloat(el.getAttribute('data-speed'));
-                gsap.to(el, {
-                    x: xAxis * speed,
-                    y: yAxis * speed,
-                    duration: 1,
-                    ease: "power2.out"
-                });
+            // Delegar animação para o GSAP Ticker (mais suave e sincronizado com o refresh rate)
+            gsap.to(tiltCard, {
+                rotationY: mouseX * 8, // Sensibilidade reduzida
+                rotationX: -mouseY * 8,
+                duration: 1.2,
+                ease: "power2.out",
+                overwrite: "auto"
             });
 
-            // Tilt sutil na imagem principal
-            gsap.to(tiltContainer, {
-                rotationY: (xAxis / rect.width) * 10,
-                rotationX: -(yAxis / rect.height) * 10,
-                duration: 1.5,
-                ease: "power2.out",
-                transformPerspective: 1000
+            parallaxIcons.forEach(el => {
+                const speed = parseFloat(el.getAttribute('data-speed')) * 50; 
+                gsap.to(el, {
+                    x: -mouseX * speed,
+                    y: -mouseY * speed,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    overwrite: "auto"
+                });
             });
         });
 
-        // Resetar posição quando o mouse sai
         mainContainer.addEventListener('mouseleave', () => {
-            parallaxEls.forEach(el => {
-                gsap.to(el, { x: 0, y: 0, duration: 1.5, ease: "power2.out" });
-            });
-            gsap.to(tiltContainer, {
-                rotationY: 0,
-                rotationX: 0,
-                duration: 1.5,
-                ease: "power2.out"
-            });
+            gsap.to(tiltCard, { rotationY: 0, rotationX: 0, duration: 2, ease: "elastic.out(1, 0.3)" });
+            parallaxIcons.forEach(el => gsap.to(el, { x: 0, y: 0, duration: 2, ease: "power2.out" }));
         });
     }
 });

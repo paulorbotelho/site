@@ -62,7 +62,10 @@
 </head>
 
 <body
-    class="min-h-screen flex items-start justify-center lg:p-6 selection:bg-brand-neon selection:text-black text-white bg-black pt-4 pr-4 pb-4 pl-4 antialiased overflow-x-hidden relative bg-fixed">
+    class="min-h-screen flex items-start justify-center lg:p-6 selection:bg-brand-neon selection:text-black text-white bg-black pt-4 pr-4 pb-4 pl-4 antialiased overflow-x-hidden relative">
+
+    <!-- Fundo Fixo Otimizado (Performance) -->
+    <div class="fixed inset-0 bg-black z-[-1]"></div>
 
     <!-- Efeitos de Fundo Centralizados Nível Bio -->
     <div class="fixed top-[15%] left-[50%] -translate-x-1/2 w-[600px] h-[600px] bg-brand-neon rounded-full blur-[250px] opacity-[0.10] pointer-events-none mix-blend-screen z-0"></div>
@@ -220,10 +223,10 @@
                         id="photo-frame">
                         <!-- Foto Secundária (Hover) -->
                         <img src="assets/img/Unknown-1.jpeg" alt="Retrato Profissional de Apoio"
-                            class="absolute inset-0 w-full h-full object-cover object-top origin-center transition-transform duration-[15s] group-hover:scale-110 z-0 opacity-80" />
+                            class="absolute inset-0 w-full h-full object-cover object-top origin-center transition-all duration-[15s] group-hover:scale-110 z-0 opacity-0 group-hover:opacity-100" />
                         <!-- Foto Principal -->
                         <img src="assets/img/Unknown.jpeg" alt="Retrato Profissional"
-                            class="absolute inset-0 w-full h-full object-cover object-top origin-center transition-all duration-500 ease-in-out group-hover:opacity-0 group-hover:scale-105 z-10 opacity-90" />
+                            class="absolute inset-0 w-full h-full object-cover object-top origin-center transition-all duration-500 ease-in-out group-hover:opacity-0 z-10 opacity-100" />
                         <!-- Overlay Elegante -->
                         <div
                             class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/50 to-transparent mix-blend-multiply opacity-90 z-15 pointer-events-none">
