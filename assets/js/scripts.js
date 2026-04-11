@@ -2,6 +2,7 @@
 lucide.createIcons();
 
 // 2. Smooth Scrolling (Lenis) - Calibrado para fluidez máxima
+// 2. Smooth Scrolling (Lenis) - Calibrado para fluidez máxima
 const lenis = new Lenis({
     duration: 1.2,
     easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -12,6 +13,9 @@ const lenis = new Lenis({
     touchMultiplier: 1.5,
     infinite: false,
 })
+
+// Sincronizar Lenis com ScrollTrigger
+lenis.on('scroll', ScrollTrigger.update);
 
 function raf(time) {
     lenis.raf(time)
@@ -41,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     gsap.registerPlugin(ScrollTrigger);
 
     // Otimização: Forçar aceleração de hardware nos elementos animados
-    gsap.set(".hero-content > *, #photo-frame, .about-visual, .about-content > *", { force3D: true, backfaceVisibility: "hidden" });
+    gsap.set(".hero-content > *, #photo-frame, .about-visual, .about-content > *, .project-cards > *", { force3D: true, backfaceVisibility: "hidden" });
 
     // Textos e botões subindo
     gsap.from(".hero-content > *", {
@@ -62,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     gsap.from("#photo-frame", {
-        scale: 0.95, // menos agressivo
+        scale: 0.95,
         y: 20,
         opacity: 0,
         duration: 1.5,
@@ -74,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
     gsap.from(".about-visual", {
         scrollTrigger: {
             trigger: "#sobre",
-            start: "top 85%",
+            start: "top 90%",
             once: true
         },
         x: -30,
@@ -86,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     gsap.from(".about-content > *", {
         scrollTrigger: {
             trigger: "#sobre",
-            start: "top 85%",
+            start: "top 90%",
             once: true
         },
         y: 30,
@@ -96,17 +100,18 @@ document.addEventListener("DOMContentLoaded", () => {
         ease: "power2.out"
     });
 
-    // --- Projetos Section Animations ---
-    gsap.from(".project-cards > *", {
+    // --- Projetos Section Animations (Ajustado para maior confiabilidade) ---
+    gsap.from(".project-cards > a", {
         scrollTrigger: {
-            trigger: "#projetos",
-            start: "top 80%",
-            once: true
+            trigger: ".project-cards",
+            start: "top 90%",
+            once: true,
+            // markers: true, // debug (remover no final)
         },
-        y: 40,
+        y: 50,
         opacity: 0,
-        duration: 1,
-        stagger: 0.15,
+        duration: 1.2,
+        stagger: 0.2,
         ease: "power2.out"
     });
 
@@ -114,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
     gsap.from("footer .footer-content > *", {
         scrollTrigger: {
             trigger: "footer",
-            start: "top 90%",
+            start: "top 95%",
             once: true
         },
         y: 30,
@@ -130,19 +135,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const tiltCard = document.getElementById('tilt-container');
 
     if (mainContainer && tiltCard) {
-        // Usar um objeto para armazenar posição alvo (evita chamadas excessivas)
         let mouseX = 0;
         let mouseY = 0;
 
         mainContainer.addEventListener('mousemove', (e) => {
             const rect = mainContainer.getBoundingClientRect();
-            // Normalizar valores entre -1 e 1
             mouseX = (e.clientX - rect.left) / rect.width * 2 - 1;
             mouseY = (e.clientY - rect.top) / rect.height * 2 - 1;
 
-            // Delegar animação para o GSAP Ticker (mais suave e sincronizado com o refresh rate)
             gsap.to(tiltCard, {
-                rotationY: mouseX * 8, // Sensibilidade reduzida
+                rotationY: mouseX * 8,
                 rotationX: -mouseY * 8,
                 duration: 1.2,
                 ease: "power2.out",
@@ -166,4 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
             parallaxIcons.forEach(el => gsap.to(el, { x: 0, y: 0, duration: 2, ease: "power2.out" }));
         });
     }
+
+    // Refresh final para garantir que todas as posições estão corretas
+    ScrollTrigger.refresh();
 });
